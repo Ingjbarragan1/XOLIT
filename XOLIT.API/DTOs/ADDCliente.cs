@@ -3,17 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace XOLIT.API.Models
+namespace XOLIT.API.DTOs
 {
-    public class Cliente
+    public class ADDCliente
     {
-        public int Id { get; set; }
         public string Nombre { get; set; }
         public string Apellido { get; set; }
         public int NumeroIdentificacion { get; set; }
         public string Direccion { get; set; }
         public int Telefono { get; set; }
-        public IList<Factura> factura { get; set; }
-
     }
 }

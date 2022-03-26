@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using XOLIT.API.Common;
 using XOLIT.API.Database;
+using XOLIT.API.DTOs;
 using XOLIT.API.Models;
 
 namespace XOLIT.API.Service
@@ -18,19 +20,28 @@ namespace XOLIT.API.Service
             this._context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<Result> AgregarClienteAsync(Cliente cliente)
+        public async Task<Result> AgregarClienteAsync(ADDCliente infoCliente)
         {
             try
             {
-                var isInvalidCliente = string.IsNullOrWhiteSpace(cliente.Nombre) ||
-                                    string.IsNullOrWhiteSpace(cliente.Direccion) ||
-                                    string.IsNullOrWhiteSpace(cliente.Direccion) ||
-                                    cliente.NumeroIdentificacion == 0 ||
-                                    cliente.Telefono == 0;
+                var isInvalidCliente = string.IsNullOrWhiteSpace(infoCliente.Nombre) ||
+                                    string.IsNullOrWhiteSpace(infoCliente.Direccion) ||
+                                    string.IsNullOrWhiteSpace(infoCliente.Direccion) ||
+                                    infoCliente.NumeroIdentificacion == 0 ||
+                                    infoCliente.Telefono == 0;
                 if (isInvalidCliente)
                 {
                     return new Result() { StatusResult = 400, StatusMessage = "parametros invalidos" };
                 }
+
+                var cliente = new Cliente()
+                {
+                    Nombre = infoCliente.Nombre,
+                    Apellido = infoCliente.Apellido,
+                    NumeroIdentificacion = infoCliente.NumeroIdentificacion,
+                    Direccion = infoCliente.Direccion,
+                    Telefono = infoCliente.Telefono
+                };
 
                 _context.cliente.Add(cliente);
                 await _context.SaveChangesAsync();
@@ -41,7 +52,7 @@ namespace XOLIT.API.Service
             {
                 return new Result() { StatusResult = 500, StatusMessage = "Error inesperado" };
             }
-           
+
         }
 
         public async Task<Result> BuscarClienteAsync(string nombreCliente)
@@ -71,7 +82,7 @@ namespace XOLIT.API.Service
             {
                 return new Result() { StatusResult = 500, StatusMessage = "Error inesperado" };
             }
-           
+
         }
 
         public async Task<Result> ActualizarClienteAsync(Cliente infoCliente)
@@ -101,10 +112,10 @@ namespace XOLIT.API.Service
             {
                 return new Result() { StatusResult = 500, StatusMessage = "Error inesperado" };
             }
-           
+
         }
 
-        public async Task<Result> BuscarProductoAsync(string nombreProducto)
+        public async Task<Result> BuscarProductoAsync(int idProducto, string nombreProducto)
         {
             try
             {
@@ -115,8 +126,15 @@ namespace XOLIT.API.Service
                     querable = querable.Where(x => x.Nombre.Contains(nombreProducto));
                 }
 
-                var producto = await querable.Select(x => new Producto()
+                if (!idProducto.Equals(0))
                 {
+                    querable = querable.Where(x => x.Id.Equals(idProducto));
+                }
+
+
+                var producto = await querable.Select(x => new GETProducto()
+                {
+                    Id = x.Id,
                     Nombre = x.Nombre,
                     ValorVentaConIVA = x.ValorVentaConIVA,
                     CantidadUnidadesIventario = x.CantidadUnidadesIventario,
@@ -125,33 +143,21 @@ namespace XOLIT.API.Service
 
                 return new Result() { StatusResult = 200, StatusMessage = "Ok", Data = producto };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                return new Result() { StatusResult = 500, StatusMessage = "Error inesperado" };
             }
 
-       
+
         }
 
-        public async Task<Result> ActualizarProductoAsync(IList<Producto> productos)
+        public async Task<Result> ActualizarProductoAsync(Producto infoProducto)
         {
             try
-            {
-                for (int i = 0; i < productos.Count; i++)
-                {
-                    var producto = await this._context.producto.FindAsync(productos[i].Nombre);
+            { 
+                _context.producto.Update(infoProducto);
+                await _context.SaveChangesAsync();
 
-                    if (producto is null)
-                    {
-                        return new Result() { StatusResult = 404, StatusMessage = "Producto No Existe" };
-                    }
-
-                    producto.CantidadUnidadesIventario = (productos[i].CantidadUnidadesIventario != productos[i].CantidadUnidadesIventario) ? productos[i].CantidadUnidadesIventario : producto.CantidadUnidadesIventario;
-
-                    _context.producto.Update(producto);
-                    await _context.SaveChangesAsync();
-                }
 
                 return new Result() { StatusResult = 200, StatusMessage = "Ok" };
             }
@@ -162,24 +168,95 @@ namespace XOLIT.API.Service
             }
         }
 
-        public async Task<Result> GuardarFacturaAsync(Factura factura)
+        public async Task<Result> GuardarFacturaAsync(ADDFactura InfoFactura)
         {
             try
             {
-                var cliente = await this._context.cliente.FindAsync(factura.Clientes[0].NumeroIdentificacion);
+                var querable = this._context.cliente.AsQueryable();
 
-                if (cliente is null) // si el cliente no existe se crea con la informacion que se diligencio
+                if (InfoFactura.cliente.NumeroIdentificacion != 0)
                 {
-                    _context.cliente.Add(factura.Clientes[0]);
-                    cliente = await this._context.cliente.FindAsync(factura.Clientes[0].NumeroIdentificacion);
+                    querable = querable.Where(x => x.NumeroIdentificacion.Equals(InfoFactura.cliente.NumeroIdentificacion));
                 }
 
-                factura.Clientes[0] = cliente;
+                var cliente = await querable.Select(x => new Cliente()
+                {
+                    Nombre = x.Nombre,
+                    Apellido = x.Apellido,
+                    NumeroIdentificacion = x.NumeroIdentificacion,
+                    Direccion = x.Direccion,
+                    Telefono = x.Telefono
+                }).ToListAsync();
+
+                if (cliente.Count <= 0) // si el cliente no existe se crea con la informacion que se diligencio
+                {
+                    var newCliente = new Cliente()
+                    {
+                        Nombre = InfoFactura.cliente.Nombre,
+                        Apellido = InfoFactura.cliente.Apellido,
+                        NumeroIdentificacion = InfoFactura.cliente.NumeroIdentificacion,
+                        Direccion = InfoFactura.cliente.Direccion,
+                        Telefono = InfoFactura.cliente.Telefono
+                    };
+
+                    _context.cliente.Add(newCliente);
+                    await _context.SaveChangesAsync();
+                }
+
+                var factura = new Factura()
+                {
+                    FechaVenta = InfoFactura.FechaVenta,
+                    TotalPrecioVenta = InfoFactura.TotalPrecioVenta,
+                    SubTotalSinIVA = InfoFactura.SubTotalSinIVA,
+                    FechaEntrega = InfoFactura.FechaEntrega
+                };
+
                 _context.factura.Add(factura);
                 await _context.SaveChangesAsync();
 
-                //se actualiza la cantida del producto en el inventario
-                await ActualizarProductoAsync(factura.productos);
+                //Guardar el detalle de la factura
+                for (int i = 0; i < InfoFactura.detalleFactura.Count; i++)
+                {
+                    var detallefactura = new DetalleFactura()
+                    {
+                        CantidadUnidades = InfoFactura.detalleFactura[i].CantidadUnidades,
+                        ValorUnitarioSinIVA = InfoFactura.detalleFactura[i].ValorUnitarioSinIVA,
+                        valorUnitarioconIVA = InfoFactura.detalleFactura[i].valorUnitarioconIVA,
+                        ValorTotalCompra = InfoFactura.detalleFactura[i].ValorTotalCompra
+                    };
+
+                    await GuardarDetalleFacturaAsync(detallefactura);
+
+                    //actualiza la cantidad del producto en el inventario
+                    var editProducto = this._context.producto.AsQueryable();
+
+                    if (InfoFactura.detalleFactura[i].Productos[i].IdProducto != 0)
+                    {
+                        editProducto = editProducto.Where(x => x.Id.Equals(InfoFactura.detalleFactura[i].Productos[i].IdProducto));
+                    }
+
+                    var productoBD = await editProducto.Select(x => new Producto()
+                    {
+                        Id = x.Id,
+                        Nombre = x.Nombre,
+                        ValorVentaConIVA = x.ValorVentaConIVA,
+                        CantidadUnidadesIventario = x.CantidadUnidadesIventario,
+                        PorcentajeIVAAplicado = x.PorcentajeIVAAplicado
+                    }).ToListAsync();
+
+                    int cantidadProductoInventario = productoBD[0].CantidadUnidadesIventario;
+
+                    var infoProducto = new Producto()
+                    {
+                        Id = productoBD[0].Id,
+                        Nombre = productoBD[0].Nombre,
+                        ValorVentaConIVA = productoBD[0].ValorVentaConIVA,
+                        CantidadUnidadesIventario = productoBD[0].CantidadUnidadesIventario - InfoFactura.detalleFactura[i].CantidadUnidades,
+                        PorcentajeIVAAplicado = productoBD[0].PorcentajeIVAAplicado
+                    };
+
+                    await ActualizarProductoAsync(infoProducto);
+                }
 
                 return new Result() { StatusResult = 200, StatusMessage = "Ok" };
             }
@@ -187,7 +264,7 @@ namespace XOLIT.API.Service
             {
                 return new Result() { StatusResult = 500, StatusMessage = "Error inesperado" };
             }
-           
+
         }
 
         public async Task<Result> BuscarFacturaAsync(int numeroFactura)
@@ -209,20 +286,15 @@ namespace XOLIT.API.Service
 
                 return new Result() { StatusResult = 500, StatusMessage = "Error inesperado" };
             }
-            
+
         }
 
         public async Task<Result> GuardarDetalleFacturaAsync(DetalleFactura detalleFactura)
         {
             try
             {
-                var producto = await _context.producto.FindAsync(detalleFactura.Producto.Nombre);
-                detalleFactura.Producto = producto;
                 _context.detalleFactura.Add(detalleFactura);
-
-                var factura = await _context.factura.FindAsync(detalleFactura.Factura.Id);
-                detalleFactura.Factura = factura;
-                _context.detalleFactura.Add(detalleFactura);
+                await _context.SaveChangesAsync();
                 return new Result() { StatusResult = 200, StatusMessage = "Ok" };
             }
             catch (Exception ex)
@@ -231,8 +303,6 @@ namespace XOLIT.API.Service
             }
 
         }
-
-        
 
     }
 }
