@@ -12,7 +12,7 @@ namespace XOLIT.API.Service
     {
         Task<Result> AgregarClienteAsync(ADDCliente cliente);
 
-        Task<Result> BuscarClienteAsync(string nombreCliente);
+        Task<Result> BuscarClienteAsync(int numeroIdentificacion);
 
         Task<Result> ActualizarClienteAsync(Cliente cliente);
         Task<Result> BuscarProductoAsync(int idProducto,string nombreProducto);

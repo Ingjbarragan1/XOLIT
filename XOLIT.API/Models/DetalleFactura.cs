@@ -11,7 +11,8 @@ namespace XOLIT.API.Models
         public int CantidadUnidades { get; set; }
         public decimal ValorUnitarioSinIVA { get; set; }
         public decimal valorUnitarioconIVA { get; set; }
-        public decimal ValorTotalCompra { get; set; }
+        public decimal ValorTotalCompra { get; set; }        
+        public int ProductoId { get; set; }
         public IList<Factura> factura { get; set; }
     }
 }

@@ -12,6 +12,7 @@ namespace XOLIT.API.Models
         public decimal TotalPrecioVenta { get; set; }
         public decimal SubTotalSinIVA { get; set; }
         public DateTime FechaEntrega { get; set; }
+        public int ClienteId { get; set; }
 
 
 

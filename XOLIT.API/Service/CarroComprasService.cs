@@ -55,19 +55,20 @@ namespace XOLIT.API.Service
 
         }
 
-        public async Task<Result> BuscarClienteAsync(string nombreCliente)
+        public async Task<Result> BuscarClienteAsync(int numeroIdentificacion)
         {
             try
             {
                 var querable = this._context.cliente.AsQueryable();
 
-                if (!string.IsNullOrWhiteSpace(nombreCliente))
+                if (!numeroIdentificacion.Equals(0))
                 {
-                    querable = querable.Where(x => x.Nombre.Contains(nombreCliente));
+                    querable = querable.Where(x => x.NumeroIdentificacion.Equals(numeroIdentificacion));
                 }
 
                 var cliente = await querable.Select(x => new Cliente()
                 {
+                    Id = x.Id,
                     Nombre = x.Nombre,
                     Apellido = x.Apellido,
                     NumeroIdentificacion = x.NumeroIdentificacion,
@@ -203,13 +204,31 @@ namespace XOLIT.API.Service
                     await _context.SaveChangesAsync();
                 }
 
+                //se consulta el ID del cliente para ingresarlo a la factura
+                var CLienteBD = this._context.cliente.AsQueryable();
+
+                if (!InfoFactura.cliente.NumeroIdentificacion.Equals(0))
+                {
+                    CLienteBD = CLienteBD.Where(x => x.NumeroIdentificacion.Equals(InfoFactura.cliente.NumeroIdentificacion));
+                }
+
+                var idcliente = await CLienteBD.Select(x => new Cliente()
+                {
+                    Id = x.Id,
+                }).ToListAsync();
+
+
+
                 var factura = new Factura()
                 {
                     FechaVenta = InfoFactura.FechaVenta,
                     TotalPrecioVenta = InfoFactura.TotalPrecioVenta,
                     SubTotalSinIVA = InfoFactura.SubTotalSinIVA,
-                    FechaEntrega = InfoFactura.FechaEntrega
+                    FechaEntrega = InfoFactura.FechaEntrega,
+                    ClienteId = idcliente[0].Id
+
                 };
+
 
                 _context.factura.Add(factura);
                 await _context.SaveChangesAsync();
@@ -222,7 +241,8 @@ namespace XOLIT.API.Service
                         CantidadUnidades = InfoFactura.detalleFactura[i].CantidadUnidades,
                         ValorUnitarioSinIVA = InfoFactura.detalleFactura[i].ValorUnitarioSinIVA,
                         valorUnitarioconIVA = InfoFactura.detalleFactura[i].valorUnitarioconIVA,
-                        ValorTotalCompra = InfoFactura.detalleFactura[i].ValorTotalCompra
+                        ValorTotalCompra = InfoFactura.detalleFactura[i].ValorTotalCompra,
+                        ProductoId = InfoFactura.detalleFactura[i].Productos[i].IdProducto
                     };
 
                     await GuardarDetalleFacturaAsync(detallefactura);
