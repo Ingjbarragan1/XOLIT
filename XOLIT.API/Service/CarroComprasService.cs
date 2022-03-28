@@ -28,7 +28,7 @@ namespace XOLIT.API.Service
                                     string.IsNullOrWhiteSpace(infoCliente.Direccion) ||
                                     string.IsNullOrWhiteSpace(infoCliente.Direccion) ||
                                     infoCliente.NumeroIdentificacion == 0 ||
-                                    infoCliente.Telefono == 0;
+                                    string.IsNullOrWhiteSpace(infoCliente.Telefono);
                 if (isInvalidCliente)
                 {
                     return new Result() { StatusResult = 400, StatusMessage = "parametros invalidos" };
@@ -221,7 +221,7 @@ namespace XOLIT.API.Service
 
                 var factura = new Factura()
                 {
-                    FechaVenta = InfoFactura.FechaVenta,
+                    FechaVenta = DateTime.Now,
                     TotalPrecioVenta = InfoFactura.TotalPrecioVenta,
                     SubTotalSinIVA = InfoFactura.SubTotalSinIVA,
                     FechaEntrega = InfoFactura.FechaEntrega,
@@ -236,23 +236,11 @@ namespace XOLIT.API.Service
                 //Guardar el detalle de la factura
                 for (int i = 0; i < InfoFactura.detalleFactura.Count; i++)
                 {
-                    var detallefactura = new DetalleFactura()
-                    {
-                        CantidadUnidades = InfoFactura.detalleFactura[i].CantidadUnidades,
-                        ValorUnitarioSinIVA = InfoFactura.detalleFactura[i].ValorUnitarioSinIVA,
-                        valorUnitarioconIVA = InfoFactura.detalleFactura[i].valorUnitarioconIVA,
-                        ValorTotalCompra = InfoFactura.detalleFactura[i].ValorTotalCompra,
-                        ProductoId = InfoFactura.detalleFactura[i].Productos[i].IdProducto
-                    };
-
-                    await GuardarDetalleFacturaAsync(detallefactura);
-
-                    //actualiza la cantidad del producto en el inventario
                     var editProducto = this._context.producto.AsQueryable();
 
-                    if (InfoFactura.detalleFactura[i].Productos[i].IdProducto != 0)
+                    if (InfoFactura.detalleFactura[i].Producto.Id != 0)
                     {
-                        editProducto = editProducto.Where(x => x.Id.Equals(InfoFactura.detalleFactura[i].Productos[i].IdProducto));
+                        editProducto = editProducto.Where(x => x.Id.Equals(InfoFactura.detalleFactura[i].Producto.Id));
                     }
 
                     var productoBD = await editProducto.Select(x => new Producto()
@@ -264,6 +252,24 @@ namespace XOLIT.API.Service
                         PorcentajeIVAAplicado = x.PorcentajeIVAAplicado
                     }).ToListAsync();
 
+                    decimal valorProductoSinIVA = productoBD[i].ValorVentaConIVA - (productoBD[i].ValorVentaConIVA * productoBD[i].PorcentajeIVAAplicado);
+
+                    var detallefactura = new DetalleFactura()
+                    {
+                        ProductoId = InfoFactura.detalleFactura[i].Producto.Id,
+                        CantidadUnidades = InfoFactura.detalleFactura[i].CantidadProducto,
+                        ValorUnitarioSinIVA = valorProductoSinIVA,
+                        valorUnitarioconIVA = productoBD[i].ValorVentaConIVA,
+                        ValorTotalCompra = InfoFactura.TotalPrecioVenta
+
+                    };
+
+                    await GuardarDetalleFacturaAsync(detallefactura);
+
+                    //actualiza la cantidad del producto en el inventario                  
+
+                    
+
                     int cantidadProductoInventario = productoBD[0].CantidadUnidadesIventario;
 
                     var infoProducto = new Producto()
@@ -271,7 +277,7 @@ namespace XOLIT.API.Service
                         Id = productoBD[0].Id,
                         Nombre = productoBD[0].Nombre,
                         ValorVentaConIVA = productoBD[0].ValorVentaConIVA,
-                        CantidadUnidadesIventario = productoBD[0].CantidadUnidadesIventario - InfoFactura.detalleFactura[i].CantidadUnidades,
+                        CantidadUnidadesIventario = productoBD[0].CantidadUnidadesIventario - InfoFactura.detalleFactura[i].CantidadProducto,
                         PorcentajeIVAAplicado = productoBD[0].PorcentajeIVAAplicado
                     };
 

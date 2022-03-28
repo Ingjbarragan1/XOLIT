@@ -7,7 +7,7 @@ namespace XOLIT.API.DTOs
 {
     public class INFOProductos
     {
-        public int IdProducto { get; set; }
+        public int Id { get; set; }
 
     }
 }

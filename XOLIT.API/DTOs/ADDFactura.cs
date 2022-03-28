@@ -8,7 +8,6 @@ namespace XOLIT.API.DTOs
 {
     public class ADDFactura
     {
-        public DateTime FechaVenta { get; set; }
         public decimal TotalPrecioVenta { get; set; }
         public decimal SubTotalSinIVA { get; set; }
         public DateTime FechaEntrega { get; set; }

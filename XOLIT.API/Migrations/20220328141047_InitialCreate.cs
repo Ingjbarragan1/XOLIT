@@ -17,7 +17,7 @@ namespace XOLIT.API.Migrations
                     Apellido = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     NumeroIdentificacion = table.Column<int>(type: "int", nullable: false),
                     Direccion = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Telefono = table.Column<int>(type: "int", nullable: false)
+                    Telefono = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -50,7 +50,7 @@ namespace XOLIT.API.Migrations
                     ValorUnitarioSinIVA = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     valorUnitarioconIVA = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     ValorTotalCompra = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    ProductoId = table.Column<int>(type: "int", nullable: true)
+                    ProductoId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -60,7 +60,7 @@ namespace XOLIT.API.Migrations
                         column: x => x.ProductoId,
                         principalTable: "producto",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -73,7 +73,7 @@ namespace XOLIT.API.Migrations
                     TotalPrecioVenta = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     SubTotalSinIVA = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     FechaEntrega = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: true),
+                    ClienteId = table.Column<int>(type: "int", nullable: false),
                     DetalleFacturaid = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
@@ -84,7 +84,7 @@ namespace XOLIT.API.Migrations
                         column: x => x.ClienteId,
                         principalTable: "cliente",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_factura_detalleFactura_DetalleFacturaid",
                         column: x => x.DetalleFacturaid,

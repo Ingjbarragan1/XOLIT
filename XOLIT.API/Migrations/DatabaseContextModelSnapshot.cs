@@ -41,8 +41,9 @@ namespace XOLIT.API.Migrations
                     b.Property<int>("NumeroIdentificacion")
                         .HasColumnType("int");
 
-                    b.Property<int>("Telefono")
-                        .HasColumnType("int");
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -59,7 +60,7 @@ namespace XOLIT.API.Migrations
                     b.Property<int>("CantidadUnidades")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ProductoId")
+                    b.Property<int>("ProductoId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("ValorTotalCompra")
@@ -85,7 +86,7 @@ namespace XOLIT.API.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("ClienteId")
+                    b.Property<int>("ClienteId")
                         .HasColumnType("int");
 
                     b.Property<int?>("DetalleFacturaid")
@@ -141,14 +142,18 @@ namespace XOLIT.API.Migrations
                 {
                     b.HasOne("XOLIT.API.Models.Producto", null)
                         .WithMany("DetalleFacturas")
-                        .HasForeignKey("ProductoId");
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("XOLIT.API.Models.Factura", b =>
                 {
                     b.HasOne("XOLIT.API.Models.Cliente", null)
                         .WithMany("factura")
-                        .HasForeignKey("ClienteId");
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("XOLIT.API.Models.DetalleFactura", null)
                         .WithMany("factura")

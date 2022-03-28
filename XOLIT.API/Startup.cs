@@ -33,6 +33,16 @@ namespace XOLIT.API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "XOLIT.API", Version = "v1" });
             });
 
+            services.AddCors(options =>
+             {
+                 options.AddDefaultPolicy(builder =>
+                 {
+                     builder.AllowAnyOrigin()
+                             .AllowAnyMethod()
+                             .AllowAnyHeader();
+                 });
+             });
+
             var connectionString = Configuration["SqlConfig:ConnectionString"];
             services.AddDbContext<DatabaseContext>(options => options.UseSqlServer(connectionString, options => options.MigrationsHistoryTable("__EFMigrationsHistory")));
             services.AddScoped<ICarroComprasService, CarroComprasService>();
@@ -56,6 +66,8 @@ namespace XOLIT.API
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseAuthorization();
 

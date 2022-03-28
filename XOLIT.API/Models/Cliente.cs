@@ -12,7 +12,7 @@ namespace XOLIT.API.Models
         public string Apellido { get; set; }
         public int NumeroIdentificacion { get; set; }
         public string Direccion { get; set; }
-        public int Telefono { get; set; }
+        public string Telefono { get; set; }
         public IList<Factura> factura { get; set; }
 
     }

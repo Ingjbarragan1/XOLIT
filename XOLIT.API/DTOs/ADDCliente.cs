@@ -11,6 +11,6 @@ namespace XOLIT.API.DTOs
         public string Apellido { get; set; }
         public int NumeroIdentificacion { get; set; }
         public string Direccion { get; set; }
-        public int Telefono { get; set; }
+        public string Telefono { get; set; }
     }
 }

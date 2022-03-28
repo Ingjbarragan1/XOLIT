@@ -33,7 +33,7 @@ namespace XOLIT.API.Controllers
                 return StatusCode(500, "Server Error");
             }
 
-            return Ok("factura creada");
+            return Ok(new { message = "factura creada"});
         }
 
         [HttpPost("agregarCliente")]
@@ -50,7 +50,7 @@ namespace XOLIT.API.Controllers
                 return StatusCode(500, "Server Error");
             }
 
-            return Ok("cliente creado");
+            return Ok(new { message = "cliente creado" });
         }
 
         [HttpGet("Productos")]

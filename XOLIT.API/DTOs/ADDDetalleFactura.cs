@@ -8,10 +8,7 @@ namespace XOLIT.API.DTOs
 {
     public class ADDDetalleFactura
     {
-        public List<INFOProductos> Productos { get; set; }
-        public int CantidadUnidades { get; set; }
-        public decimal ValorUnitarioSinIVA { get; set; }
-        public decimal valorUnitarioconIVA { get; set; }
-        public decimal ValorTotalCompra { get; set; }
+        public INFOProductos Producto { get; set; }
+        public int CantidadProducto { get; set; }
     }
 }

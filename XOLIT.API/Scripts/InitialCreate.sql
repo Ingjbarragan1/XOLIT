@@ -17,7 +17,7 @@ CREATE TABLE [cliente] (
     [Apellido] nvarchar(max) NOT NULL,
     [NumeroIdentificacion] int NOT NULL,
     [Direccion] nvarchar(max) NOT NULL,
-    [Telefono] int NOT NULL,
+    [Telefono] nvarchar(max) NOT NULL,
     CONSTRAINT [PK_cliente] PRIMARY KEY ([Id])
 );
 GO
@@ -38,9 +38,9 @@ CREATE TABLE [detalleFactura] (
     [ValorUnitarioSinIVA] decimal(18,2) NOT NULL,
     [valorUnitarioconIVA] decimal(18,2) NOT NULL,
     [ValorTotalCompra] decimal(18,2) NOT NULL,
-    [ProductoId] int NULL,
+    [ProductoId] int NOT NULL,
     CONSTRAINT [PK_detalleFactura] PRIMARY KEY ([id]),
-    CONSTRAINT [FK_detalleFactura_producto_ProductoId] FOREIGN KEY ([ProductoId]) REFERENCES [producto] ([Id]) ON DELETE NO ACTION
+    CONSTRAINT [FK_detalleFactura_producto_ProductoId] FOREIGN KEY ([ProductoId]) REFERENCES [producto] ([Id]) ON DELETE CASCADE
 );
 GO
 
@@ -50,10 +50,10 @@ CREATE TABLE [factura] (
     [TotalPrecioVenta] decimal(18,2) NOT NULL,
     [SubTotalSinIVA] decimal(18,2) NOT NULL,
     [FechaEntrega] datetime2 NOT NULL,
-    [ClienteId] int NULL,
+    [ClienteId] int NOT NULL,
     [DetalleFacturaid] int NULL,
     CONSTRAINT [PK_factura] PRIMARY KEY ([Id]),
-    CONSTRAINT [FK_factura_cliente_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [cliente] ([Id]) ON DELETE NO ACTION,
+    CONSTRAINT [FK_factura_cliente_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [cliente] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_factura_detalleFactura_DetalleFacturaid] FOREIGN KEY ([DetalleFacturaid]) REFERENCES [detalleFactura] ([id]) ON DELETE NO ACTION
 );
 GO
@@ -80,7 +80,7 @@ INSERT INTO [dbo].[Producto] VALUES ('Audifonos',320000,1000,0.16)
 GO
 
 INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-VALUES (N'20220325205440_InitialCreate', N'6.0.0-preview.5.21301.9');
+VALUES (N'20220328141047_InitialCreate', N'6.0.0-preview.5.21301.9');
 GO
 
 COMMIT;
